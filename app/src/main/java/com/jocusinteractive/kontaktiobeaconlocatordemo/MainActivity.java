@@ -8,6 +8,9 @@
     import android.content.pm.PackageManager;
     import android.os.Build;
     import android.os.Bundle;
+    import android.support.annotation.NonNull;
+    import android.support.v4.app.ActivityCompat;
+    import android.support.v4.content.ContextCompat;
     import android.support.v7.app.AlertDialog;
     import android.support.v7.app.AppCompatActivity;
     import android.util.Log;
@@ -38,32 +41,15 @@
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_main);
 
-            KontaktSDK.initialize("BmhPDrHhfAGhidiMkwQTVNpqNkJDlLuv"); //from web portal
+
 
             textView = (TextView) findViewById(R.id.textView);
 
 
 
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-                if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("This app need location access");
-                    builder.setMessage("Please grant these permissions so the beacons can be identified");
-                    builder.setPositiveButton(android.R.string.ok, null);
-                    builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                        @TargetApi(Build.VERSION_CODES.M)
-                        @Override
-                        public void onDismiss(DialogInterface dialog) {
-                            requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
-                        }
-                    });
-                    builder.show();
-
-                }
-
-            }
 
 
+            KontaktSDK.initialize("BmhPDrHhfAGhidiMkwQTVNpqNkJDlLuv"); //from web portal
 
 
             proximityManager = new ProximityManager(this);
@@ -74,12 +60,70 @@
 
         }
 
+        private void checkPermissionAndStart() {
+            int checkSelfPermissionResult = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+            if (PackageManager.PERMISSION_GRANTED == checkSelfPermissionResult) {
+                //already granted
+                startScanning();
+            } else {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                    //we should show some explanation for user here
+                    showExplanationDialog();
+                } else {
+                    //request permission
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 100);
+                }
+            }
+        }
+
+
+
+        private void showExplanationDialog(){
+            new AlertDialog.Builder(this.getApplicationContext())
+                    .setTitle("Allow Location Services")
+                    .setMessage("Android requires location services to be enabled for the BLE Beacon tracking to work correctly")
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // continue with delete
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+        }
+        private void showDisableDialog(){
+            new AlertDialog.Builder(this.getApplicationContext())
+                    .setTitle("No Location Services")
+                    .setMessage("Location services have not been allowed therefore the BLE becons cannon be detected. This app will NOT work correctly.")
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            // continue with delete
+                        }
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+        }
+
+        @Override
+        public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (100 == requestCode) {
+                    //same request code as was in request permission
+                    startScanning();
+                }
+
+            } else {
+                //not granted permission
+                //show some explanation dialog that some features will not work
+                showDisableDialog();
+            }
+        }
+
 
 
         @Override
         protected void onStart() {
             super.onStart();
-            startScanning();
+            checkPermissionAndStart();
         }
 
         @Override
