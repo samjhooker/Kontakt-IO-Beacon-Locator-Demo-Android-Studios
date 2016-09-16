@@ -38,7 +38,10 @@
         private TextView textView;
 
 
-
+        /**
+         * Initiliser for the Application. Sets up SDK and attaches View elements
+         * @param savedInstanceState
+         */
         @Override
         protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -64,6 +67,10 @@
 
         }
 
+        /**
+         * Checks that CourseLocation permissions are granted and ask if necessary.
+         * Then starts the scanning for Beacons
+         */
         private void checkPermissionAndStart() {
             int checkSelfPermissionResult = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
             if (PackageManager.PERMISSION_GRANTED == checkSelfPermissionResult) {
@@ -81,7 +88,9 @@
         }
 
 
-
+        /**
+         * makes and shows dialogue telling user to allow location services
+         */
         private void showExplanationDialog(){
             new AlertDialog.Builder(this.getApplicationContext())
                     .setTitle("Allow Location Services")
@@ -94,6 +103,10 @@
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .show();
         }
+
+        /**
+         * makes and shows dialogue telling user that location is diabaled and app will not work as expected
+         */
         private void showDisableDialog(){
             new AlertDialog.Builder(this.getApplicationContext())
                     .setTitle("No Location Services")
@@ -107,6 +120,15 @@
                     .show();
         }
 
+
+        /**
+         * The result from the CheckPermissionAndStart function. This recieves the users
+         * responce to the permission required and either starts scanning
+         * for beacons or stops scanning accoridngly.
+         * @param requestCode int identifier for the the request "Access_Course_Location" = 1
+         * @param permissions List of permissions that have been asked to the user
+         * @param grantResults List of permissions granted by the user.
+         */
         @Override
         public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -123,19 +145,31 @@
         }
 
 
-
+        /**
+         * Starting function for the application. What is done when the app runs.
+         * Calls the permission function in this case
+         */
         @Override
         protected void onStart() {
             super.onStart();
             checkPermissionAndStart();
         }
 
+
+        /**
+         * Finishing Function. What is done when the app is exited or closed.
+         * Stops scanning in this case.
+         */
         @Override
         protected void onStop() {
             proximityManager.stopScanning();
             super.onStop();
         }
 
+        /**
+         * Destruction fuction. What is done when activity is destroyed.
+         * stops running functions.
+         */
         @Override
         protected void onDestroy() {
             proximityManager.disconnect();
@@ -143,6 +177,10 @@
             super.onDestroy();
         }
 
+
+        /**
+         * Starts scanning for nearby bluetooth beacons
+         */
         private void startScanning() {
             proximityManager.connect(new OnServiceReadyListener() {
                 @Override
@@ -152,6 +190,10 @@
             });
         }
 
+        /**
+         * iBeacon Listener. reacts when iBeacons have been found
+         * @return the Listener
+         */
         private IBeaconListener createIBeaconListener() {
             return new SimpleIBeaconListener() {
 
@@ -160,6 +202,11 @@
                     super.onIBeaconsUpdated(ibeacons, region);
                 }
 
+                /**
+                 * called when listener has found a new iBeacon. Displays informtion in the textView
+                 * @param ibeacon the ibeaken object found
+                 * @param region the region the ibeaken was found in
+                 */
                 @Override
                 public void onIBeaconDiscovered(IBeaconDevice ibeacon, IBeaconRegion region) {
                     CharSequence text = textView.getText();
@@ -170,7 +217,10 @@
         }
 
 
-
+        /**
+         * shows an onscreen toast
+         * @param message the message to be shown within the onscreen toast
+         */
         private void showToast(final String message) {
             runOnUiThread(new Runnable() {
                 @Override
@@ -181,13 +231,24 @@
         }
 
 
+        /**
+         * A Listener for the status of scanning
+         * @return the listener
+         */
         private ScanStatusListener createScanStatusListener() {
             return new SimpleScanStatusListener() {
+
+                /**
+                 * To be called when listener has detected scanning start. Show toast
+                 */
                 @Override
                 public void onScanStart() {
                     showToast("Scanning started");
                 }
 
+                /**
+                 * To be called when listener has detected scanning stop. Show toast
+                 */
                 @Override
                 public void onScanStop() {
                     showToast("Scanning stopped");
