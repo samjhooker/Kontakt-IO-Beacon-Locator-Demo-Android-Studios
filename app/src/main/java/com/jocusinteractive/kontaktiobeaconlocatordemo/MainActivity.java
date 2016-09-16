@@ -15,12 +15,15 @@
     import android.support.v7.app.AppCompatActivity;
     import android.util.Log;
     import android.widget.TextView;
+    import android.widget.Toast;
 
     import com.kontakt.sdk.android.ble.connection.OnServiceReadyListener;
     import com.kontakt.sdk.android.ble.manager.ProximityManager;
     import com.kontakt.sdk.android.ble.manager.ProximityManagerContract;
     import com.kontakt.sdk.android.ble.manager.listeners.IBeaconListener;
+    import com.kontakt.sdk.android.ble.manager.listeners.ScanStatusListener;
     import com.kontakt.sdk.android.ble.manager.listeners.simple.SimpleIBeaconListener;
+    import com.kontakt.sdk.android.ble.manager.listeners.simple.SimpleScanStatusListener;
     import com.kontakt.sdk.android.common.KontaktSDK;
     import com.kontakt.sdk.android.common.profile.IBeaconDevice;
     import com.kontakt.sdk.android.common.profile.IBeaconRegion;
@@ -54,6 +57,7 @@
 
             proximityManager = new ProximityManager(this);
             proximityManager.setIBeaconListener(createIBeaconListener());
+            proximityManager.setScanStatusListener(createScanStatusListener());
 
 
 
@@ -164,6 +168,33 @@
                 }
             };
         }
+
+
+
+        private void showToast(final String message) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+
+        private ScanStatusListener createScanStatusListener() {
+            return new SimpleScanStatusListener() {
+                @Override
+                public void onScanStart() {
+                    showToast("Scanning started");
+                }
+
+                @Override
+                public void onScanStop() {
+                    showToast("Scanning stopped");
+                }
+            };
+        }
+
 
 
     }
